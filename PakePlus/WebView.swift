@@ -14,7 +14,7 @@ struct WebView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
-        
+
         // debug script
         if debug, let debugScript = WebView.loadJSFile(named: "vConsole") {
             let fullScript = debugScript + "\nvar vConsole = new window.VConsole();"
@@ -27,7 +27,7 @@ struct WebView: UIViewRepresentable {
         }
 
         // webView.customUserAgent = ""
-        
+
         // disable double tap zoom
         let script = """
             var meta = document.createElement('meta');
@@ -37,29 +37,31 @@ struct WebView: UIViewRepresentable {
         """
         let scriptInjection = WKUserScript(source: script, injectionTime: .atDocumentEnd, forMainFrameOnly: false)
         webView.configuration.userContentController.addUserScript(scriptInjection)
-        
+
         // load custom script
         if let customScript = WebView.loadJSFile(named: "custom") {
             let userScript = WKUserScript(
                 source: customScript,
                 injectionTime: .atDocumentStart,
-                forMainFrameOnly: false
+                forMainFrameOnly: true
             )
             webView.configuration.userContentController.addUserScript(userScript)
         }
 
         // load url
         webView.load(URLRequest(url: url))
-        
+
+        // delegate 设置
+
         // Add gesture recognizers
         let rightSwipeGesture = UISwipeGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleRightSwipe(_:)))
         rightSwipeGesture.direction = .right
         webView.addGestureRecognizer(rightSwipeGesture)
-        
+
         let leftSwipeGesture = UISwipeGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleLeftSwipe(_:)))
         leftSwipeGesture.direction = .left
         webView.addGestureRecognizer(leftSwipeGesture)
-        
+
         return webView
     }
 
@@ -79,13 +81,13 @@ struct WebView: UIViewRepresentable {
             // disable zoom
             return nil
         }
-        
+
         @objc func handleRightSwipe(_ gesture: UISwipeGestureRecognizer) {
             if let webView = gesture.view as? WKWebView, webView.canGoBack {
                 webView.goBack()
             }
         }
-        
+
         @objc func handleLeftSwipe(_ gesture: UISwipeGestureRecognizer) {
             if let webView = gesture.view as? WKWebView, webView.canGoForward {
                 webView.goForward()
@@ -99,14 +101,13 @@ struct WebView: UIViewRepresentable {
     }
 }
 
-
 extension WebView {
     static func loadJSFile(named filename: String) -> String? {
         guard let path = Bundle.main.path(forResource: filename, ofType: "js") else {
             print("Could not find \(filename).js in bundle")
             return nil
         }
-        
+
         do {
             let jsString = try String(contentsOfFile: path, encoding: .utf8)
             return jsString
