@@ -25,6 +25,7 @@ jobs:
                   cp -R "$APP_PATH" Payload/
                   zip -r PakePlus.ipa Payload
                   mkdir -p export
+                  ls -l
                   mv PakePlus.ipa export/
 
             - name: Upload IPA Artifact
