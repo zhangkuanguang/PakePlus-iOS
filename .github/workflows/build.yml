@@ -1,54 +1,30 @@
-name: iOS Build (Unsigned IPA)
+name: Build Unsigned IPA
 
 on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+    workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: macos-latest
+    build-ipa:
+        runs-on: macos-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Select Xcode version
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app # 根据实际 Xcode 版本调整
+            - name: Build and export unsigned IPA
+              run: |
+                  xcodebuild -workspace PakePlus.xcworkspace -scheme PakePlus -configuration Release -sdk iphoneos clean build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
-      - name: Build archive
-        run: |
-          xcodebuild clean archive \
-            -project PakePlus.xcodeproj \    # 这里改成你项目的实际 .xcodeproj 名称
-            -scheme PakePlus \               # 这里改成你的 scheme 名称
-            -configuration Release \
-            -archivePath $PWD/build/PakePlus.xcarchive \
-            SKIP_INSTALL=NO \
-            BUILD_LIBRARY_FOR_DISTRIBUTION=YES
+                  # 导出IPA，需自定义路径，假设输出到build/Release-iphoneos
+                  mkdir -p export
+                  xcrun -sdk iphoneos PackageApplication -v "$(pwd)/build/Release-iphoneos/PakePlus.app" -o "$(pwd)/export/PakePlus.ipa"
 
-      - name: Create ExportOptions.plist
-        run: |
-          cat > ExportOptions.plist <<EOF
-          {
-            "compileBitcode": false,
-            "method": "ad-hoc",
-            "signingStyle": "manual",
-            "stripSwiftSymbols": true,
-            "teamID": "",
-            "thinning": "<none>"
-          }
-          EOF
+                  # 新版Xcode可能没有PackageApplication，可用zip打包
+                  # cd build/Release-iphoneos
+                  # zip -r ../../export/PakePlus.ipa PakePlus.app
 
-      - name: Export IPA (Unsigned)
-        run: |
-          xcodebuild -exportArchive \
-            -archivePath $PWD/build/PakePlus.xcarchive \
-            -exportOptionsPlist ExportOptions.plist \
-            -exportPath $PWD/build
-
-      - name: Upload IPA Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PakePlus-unsigned-ipa
-          path: build/*.ipa
+            - name: Upload IPA Artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: PakePlus-ipa
+                  path: export/PakePlus.ipa
