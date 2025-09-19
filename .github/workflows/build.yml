@@ -51,11 +51,6 @@ jobs:
                   node-version: 20
                   cache: pnpm
 
-            - name: Init Project Config
-              run: |
-                  pnpm install
-                  pnpm pp:worker
-
             - name: Build IPA Package
               run: |
                   export THEOS=$HOME/theos
