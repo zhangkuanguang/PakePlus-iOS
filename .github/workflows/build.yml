@@ -13,15 +13,12 @@ jobs:
 
             - name: Build and export unsigned IPA
               run: |
-                  xcodebuild -workspace PakePlus.xcworkspace -scheme PakePlus -configuration Release -sdk iphoneos clean build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+                  xcodebuild -project PakePlus.xcodeproj -scheme PakePlus -configuration Release -sdk iphoneos clean build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
-                  # 导出IPA，需自定义路径，假设输出到build/Release-iphoneos
                   mkdir -p export
-                  xcrun -sdk iphoneos PackageApplication -v "$(pwd)/build/Release-iphoneos/PakePlus.app" -o "$(pwd)/export/PakePlus.ipa"
-
-                  # 新版Xcode可能没有PackageApplication，可用zip打包
-                  # cd build/Release-iphoneos
-                  # zip -r ../../export/PakePlus.ipa PakePlus.app
+                  # 打包 .app 为 .ipa（新版 Xcode 已无 PackageApplication，可直接 zip）
+                  cd build/Release-iphoneos
+                  zip -r ../../export/PakePlus.ipa PakePlus.app
 
             - name: Upload IPA Artifact
               uses: actions/upload-artifact@v4
