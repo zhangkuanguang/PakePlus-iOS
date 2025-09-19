@@ -11,14 +11,21 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v4
 
-            - name: Build and export unsigned IPA
+            - name: Build for Release
               run: |
-                  xcodebuild -project PakePlus.xcodeproj -scheme PakePlus -configuration Release -sdk iphoneos clean build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+                  xcodebuild -project PakePlus.xcodeproj -scheme PakePlus -configuration Release -sdk iphoneos \
+                    CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
 
+            - name: Find .app and package as IPA
+              run: |
+                  # 查找生成的 .app 目录
+                  APP_PATH=$(find ~/Library/Developer/Xcode/DerivedData -type d -name "PakePlus.app" | grep Release-iphoneos | head -n 1)
+                  echo "APP_PATH is $APP_PATH"
+                  mkdir -p Payload
+                  cp -R "$APP_PATH" Payload/
+                  zip -r PakePlus.ipa Payload
                   mkdir -p export
-                  # 打包 .app 为 .ipa（新版 Xcode 已无 PackageApplication，可直接 zip）
-                  cd build/Release-iphoneos
-                  zip -r ../../export/PakePlus.ipa PakePlus.app
+                  mv PakePlus.ipa export/
 
             - name: Upload IPA Artifact
               uses: actions/upload-artifact@v4
