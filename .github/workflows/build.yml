@@ -5,16 +5,21 @@ on:
 
 jobs:
     build-ipa:
-        runs-on: macos-15.4
+        runs-on: macos-latest
 
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
 
-            - name: Set up Xcode
-              uses: maxim-lobanov/setup-xcode@v1
-              with:
-                  xcode-version: '16.4.0'
+            - name: Print environment information
+              run: |
+                  echo "macOS version: $RUNNER_OS"
+                  echo "Runner OS version details:"
+                  sw_vers
+                  echo "Xcode version:"
+                  xcodebuild -version
+                  echo "Xcode path:"
+                  xcode-select -p
 
             - name: Build for Release
               run: |
